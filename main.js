@@ -1,3 +1,24 @@
+/*
+*
+* Config
+*
+*/
+
+const QUESTION_FILES = [
+    "Algorithms_and_Programming",
+    "Artificial_intelligence",
+    "Computer_networks",
+    "Cybersecurity",
+    "Database_systems",
+    "Information_systems"
+]
+
+/*
+*
+* Program
+*
+*/
+
 class Question{
     constructor(Title) {
         this.title = Title;
@@ -165,7 +186,7 @@ function createNextQuestionButton(parent){
 
 function nextQuestion(){
     deleteQuestionContainer();
-    main();
+    ShowNewQuestion();
 }
 
 function deleteQuestionContainer(){
@@ -174,11 +195,6 @@ function deleteQuestionContainer(){
 }
 
 async function getQuestionsAsJSON(id){
-    //let _id = id;
-    //jsonText = document.getElementById(_id).textContent;
-    //return fetch("questions/" + id + ".json");
-    //return JSON.parse(jsonText);
-
     const response = await fetch("questions/" + id + ".json");
     return await response.json();
 }
@@ -211,23 +227,15 @@ function getFilterButtonState(buttonID){
     return document.getElementById(buttonID).classList.contains("activeFilterButton");
 }
 
-questions_InformationSystems = getQuestions("Information_systems");
-questions_DatabaseSystems = getQuestions("Database_systems");
-questions_AlgorithmsAndProgramming = getQuestions("Algorithms_and_Programming");
-questions_ArtificialIntelligence = getQuestions("Artificial_intelligence");
-questions_ComputerNetworks = getQuestions("Computer_networks");
-questions_Cybersecurity = getQuestions("Cybersecurity");
-
 lastQuestionID = null;
+
 function selectQuestion(){
     let questions = [];
 
-    if(getFilterButtonState("Filter_IS")) questions.push.apply(questions, questions_InformationSystems);
-    if(getFilterButtonState("Filter_DS")) questions.push.apply(questions, questions_DatabaseSystems);
-    if(getFilterButtonState("Filter_AAP")) questions.push.apply(questions, questions_AlgorithmsAndProgramming);
-    if(getFilterButtonState("Filter_AI")) questions.push.apply(questions, questions_ArtificialIntelligence);
-    if(getFilterButtonState("Filter_CN")) questions.push.apply(questions, questions_ComputerNetworks);
-    if(getFilterButtonState("Filter_CS")) questions.push.apply(questions, questions_Cybersecurity);
+    for (const questionList of questionCategories) {
+        if(getFilterButtonState("Filter_" + questionList["key"])) 
+            questions.push.apply(questions, questionList["value"]);
+    }
 
     if(questions.length < 1) return null;
     if(questions.length == 1) return questions[0];
@@ -254,37 +262,38 @@ function createFilterButton(innerHtml, id, parent){
 *
 */
 
+questionCategories = [];
+
 async function start(){
     filterContainer = createElement("div", "", "filterContainer", "", document.body);
     createElement("a", "Show questions from:", "filterHeader", "", filterContainer);
     endLine(filterContainer);
 
-    questions_InformationSystems = await getQuestions("Information_systems");
-    questions_DatabaseSystems = await getQuestions("Database_systems");
-    questions_AlgorithmsAndProgramming = await getQuestions("Algorithms_and_Programming");
-    questions_ArtificialIntelligence = await getQuestions("Artificial_intelligence");
-    questions_ComputerNetworks = await getQuestions("Computer_networks");
-    questions_Cybersecurity = await getQuestions("Cybersecurity");
-    
+    for (const fileName of QUESTION_FILES) {
+        let _questions = await getQuestions(fileName);
 
-    createFilterButton("Algorithms and programming (" + questions_AlgorithmsAndProgramming.length + ")", "Filter_AAP", filterContainer);
-    createFilterButton("Database systems (" + questions_DatabaseSystems.length + ")", "Filter_DS", filterContainer);
-    createFilterButton("Information systems (" + questions_InformationSystems.length + ")", "Filter_IS", filterContainer);
-    createFilterButton("Artificial Intelligence (" + questions_ArtificialIntelligence.length + ")", "Filter_AI", filterContainer);
-    createFilterButton("Computer networks (" + questions_ComputerNetworks.length + ")", "Filter_CN", filterContainer);
-    createFilterButton("Cybersecurity (" + questions_Cybersecurity.length + ")", "Filter_CS", filterContainer);
+        questionCategories.push({
+            key: fileName,
+            value: _questions
+        })
+
+        createFilterButton(
+            fileName + " (" + _questions.length + ")", 
+            "Filter_" + fileName, 
+            filterContainer
+        );
+    }
 }
 
-function main(){
+function ShowNewQuestion(){
     question = selectQuestion();
     if(question) question.generateHTML();
     else Question.generateNoQuestionsErrorHTML();
-
 }
 
 async function init(){
     await start();
-    main();
+    ShowNewQuestion();
 }
 
 init();
