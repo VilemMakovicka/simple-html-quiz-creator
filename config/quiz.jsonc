@@ -1,0 +1,16 @@
+{
+    "question_file_names": [
+        "Algorithms_and_Programming.json",
+        "Artificial_intelligence.json",
+        "Computer_networks.json",
+        "Cybersecurity.json",
+        "Database_systems.json",
+        "Information_systems.json"
+    ],
+    "button_answer": "Show answer",
+    "button_check": "Check answer",
+    "button_next": "Next question",
+    "response_text_correct": "Correct!",
+    "response_text_wrong": "Wrong. Try again.",
+    "response_text_answer": "Correct answer: "
+}

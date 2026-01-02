@@ -4,14 +4,13 @@
 *
 */
 
-const QUESTION_FILES = [
-    "Algorithms_and_Programming",
-    "Artificial_intelligence",
-    "Computer_networks",
-    "Cybersecurity",
-    "Database_systems",
-    "Information_systems"
-]
+question_files = [];
+config = [];
+
+async function loadConfig(){
+    const response = await fetch("config/quiz.jsonc");
+    config = await response.json();
+}
 
 /*
 *
@@ -118,7 +117,7 @@ function createQuestionTitle(text, container){
 function createQuestionCheckButton_Text(parent, question){
     element = document.createElement("button");
     element.className = "questionCheckButton";
-    element.innerHTML = "Zkontrolovat";
+    element.innerHTML = config["button_check"];
 
     element.addEventListener("click", () => { checkTextQuestion(parent, question); });
 
@@ -151,26 +150,26 @@ function checkTextQuestion(parent, question){
     }
 
     if (correct) {
-        feedback.textContent = "Správně!";
+        feedback.textContent = config["response_text_correct"];
         inputBox.style.backgroundColor = "#45ff45";
         feedback.style.color = "#45ff45";
         setTimeout( function() { nextQuestion(); }, 1000);
     } else {
-        feedback.textContent = "Špatně. Zkus to znovu.";
+        feedback.textContent = config["response_text_wrong"];
         inputBox.style.backgroundColor = "#ff4545";
         feedback.style.color = "#ff4545";
     }
 }
 
 function createQuestionAnswersButton_Text(parent, question){
-    element = createElement("button", "Odpověď", "questionAnswerButton", "", parent);
+    element = createElement("button", config["button_answer"], "questionAnswerButton", "", parent);
 
     element.addEventListener("click", () => {
         const answer = Array.isArray(question.answer) ? question.answer[0] : question.answer;
 
         let answerBox = parent.querySelector(".answers");
         if (!answerBox) { 
-            answerBox = createElement("div", "Správná odpověď: " + answer, "answers", "", parent);
+            answerBox = createElement("div", config["response_text_answer"] + answer, "answers", "", parent);
             answerBox.style.color = "#4545ff";
         }
     });
@@ -179,7 +178,7 @@ function createQuestionAnswersButton_Text(parent, question){
 }
 
 function createNextQuestionButton(parent){
-    button = createElement("button", "Další otázka", "nextQuestionButton", "", parent);
+    button = createElement("button", config["button_next"], "nextQuestionButton", "", parent);
     button.addEventListener("click", () => { nextQuestion(); });
     return button;
 }
@@ -195,7 +194,7 @@ function deleteQuestionContainer(){
 }
 
 async function getQuestionsAsJSON(id){
-    const response = await fetch("questions/" + id + ".json");
+    const response = await fetch("questions/" + id);
     return await response.json();
 }
 
@@ -265,11 +264,15 @@ function createFilterButton(innerHtml, id, parent){
 questionCategories = [];
 
 async function start(){
+    await loadConfig();
+
+    question_files = config["question_file_names"];
+
     filterContainer = createElement("div", "", "filterContainer", "", document.body);
     createElement("a", "Show questions from:", "filterHeader", "", filterContainer);
     endLine(filterContainer);
 
-    for (const fileName of QUESTION_FILES) {
+    for (const fileName of question_files) {
         let _questions = await getQuestions(fileName);
 
         questionCategories.push({
@@ -277,8 +280,11 @@ async function start(){
             value: _questions
         })
 
+        filterName = fileName.replace(/.json/gi, "");
+        filterName = filterName.replace(/_/gi, " ");
+
         createFilterButton(
-            fileName + " (" + _questions.length + ")", 
+            filterName + " (" + _questions.length + ")", 
             "Filter_" + fileName, 
             filterContainer
         );
