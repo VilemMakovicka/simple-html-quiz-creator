@@ -99,10 +99,6 @@ function endLine(parent){
 
 function createCheckBoxes(parent){
     element = createElement("button", "", "", parent);
-    //element.ariaPressed = "false";
-
-    //<button type="button" id="btn-my-toggle" aria-pressed="false">Click me, a toggle button</button>
-
     return element;
 }
 
