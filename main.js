@@ -265,13 +265,14 @@ async function start(){
     questions_ArtificialIntelligence = await getQuestions("Artificial_intelligence");
     questions_ComputerNetworks = await getQuestions("Computer_networks");
     questions_Cybersecurity = await getQuestions("Cybersecurity");
+    
 
-    createFilterButton("Algorithms and programming", "Filter_AAP", filterContainer);
-    createFilterButton("Database systems", "Filter_DS", filterContainer);
-    createFilterButton("Information systems", "Filter_IS", filterContainer);
-    createFilterButton("Artificial Intelligence", "Filter_AI", filterContainer);
-    createFilterButton("Computer networks", "Filter_CN", filterContainer);
-    createFilterButton("Cybersecurity", "Filter_CS", filterContainer);
+    createFilterButton("Algorithms and programming (" + questions_AlgorithmsAndProgramming.length + ")", "Filter_AAP", filterContainer);
+    createFilterButton("Database systems (" + questions_DatabaseSystems.length + ")", "Filter_DS", filterContainer);
+    createFilterButton("Information systems (" + questions_InformationSystems.length + ")", "Filter_IS", filterContainer);
+    createFilterButton("Artificial Intelligence (" + questions_ArtificialIntelligence.length + ")", "Filter_AI", filterContainer);
+    createFilterButton("Computer networks (" + questions_ComputerNetworks.length + ")", "Filter_CN", filterContainer);
+    createFilterButton("Cybersecurity (" + questions_Cybersecurity.length + ")", "Filter_CS", filterContainer);
 }
 
 function main(){
