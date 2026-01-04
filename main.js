@@ -10,7 +10,7 @@ config = [];
 async function loadConfig(){
     let response;
     response = await fetch("config/quiz.json");
-    if(response["redirected"] == false){
+    if(response["ok"] == false){
         response = await fetch("https://cdn.jsdelivr.net/gh/VilemMakovicka/simple-html-quiz-creator@main/config/quiz.json");
         console.log("[ GLOBAL ] Internal config wasn't found. Backup config loaded.");
     }
