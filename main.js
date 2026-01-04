@@ -10,6 +10,7 @@ config = [];
 async function loadConfig(){
     const response = await fetch("config/quiz.json");
     config = await response.json();
+    console.log("[ GLOBAL ] config loaded.");
 }
 
 /*
@@ -25,13 +26,16 @@ class Question{
     static getQuestionsFromJson(json){
         return json;
     }
+    createShowAnswersButton(){
+
+    }
     generateHTML(){
         
     }
     static generateNoQuestionsErrorHTML(){
         let questionContainer = createDiv("", "questionContainer", "", document.body);
         createElement("h3", "Žádné otázky nebyly nalezeny!", "questionTitle", "", questionContainer);
-        button = createElement("button", "Refresh", "nextQuestionButton", "", questionContainer);
+        let button = createElement("button", "Refresh", "nextQuestionButton", "", questionContainer);
         button.addEventListener("click", () => { nextQuestion(); });
     }
 }
@@ -42,10 +46,93 @@ class Question_Options extends Question{
         this.falseOptions = FalseOptions;
         this.correctOptions = CorrectOptions;
     }
+    createCheckBoxes(parent){
+        for(let answers_correct of this.correctOptions){
+            let element = createElement("button", answers_correct, "option_button", "", parent);
+            element.addEventListener("click", () => { toggleSelected(element); })
+        }
+        for(let answers_false of this.falseOptions){
+            let element = createElement("button", answers_false, "option_button", "", parent);
+            element.addEventListener("click", () => { toggleSelected(element); })
+        }
+    }
+    checkAnswer(Answer){
+        let isSelectedByUser = Answer["selected"]
+        let shouldBeSelectedByUser = this.correctOptions.includes(Answer["value"]);
+
+        if(isSelectedByUser == shouldBeSelectedByUser)
+            return true;
+        else
+            return false;
+    }
+    checkAnswersAndColorizeThem(optionElements){
+        for(let optionElement of optionElements){
+            let isSelected = optionElement.classList.contains("selected");
+            let isCorrect = this.checkAnswer({
+                "value": optionElement.innerHTML,
+                "selected":  isSelected
+            });
+
+            if(isCorrect){
+                if(isSelected) optionElement.style.backgroundColor = "#45ff45";
+                else optionElement.style.backgroundColor = "#ffffffff";
+                optionElement.style.color = "#389238ff";
+                optionElement.style.borderColor = "#195e23ff";
+            }
+            else{
+                if(isSelected) optionElement.style.backgroundColor = "#ff4545";
+                else optionElement.style.backgroundColor = "#ffffffff";
+                optionElement.style.color = "#923838ff";
+                optionElement.style.borderColor = "#5e1919ff";
+            }
+        }
+    }
+    getCorrectOptionsAsString(){
+        let value = "";
+
+        let addComma = false;
+        for(let correctOption of this.correctOptions){
+            if (addComma) value += ", ";
+            value += correctOption;
+            addComma = true;
+        }
+
+        return value;
+    }
+    createShowAnswerButton(parent){
+        element = createElement("button", config["button_answer"], "questionAnswerButton", "", parent);
+
+        element.addEventListener("click", () => {
+            let answerBox = parent.querySelector(".answers");
+            if (!answerBox) { 
+                answerBox = createElement("div",  interpolateFromConfig("response_text_answer", [{"key": "answer", "value": this.getCorrectOptionsAsString()}]), "", "", parent);
+                answerBox.style.color = "#4545ff";
+            }
+        });
+
+        return element;
+    }
+    createCheckAnswerButton(parent){
+        element = document.createElement("button");
+        element.className = "questionCheckButton";
+        element.innerHTML = config["button_check"];
+
+        element.addEventListener("click", () => { 
+            let optionElements = document.getElementsByClassName("option_button");
+            this.checkAnswersAndColorizeThem(optionElements); 
+        });
+
+        parent.appendChild(element);
+        return element;
+    }
     generateHTML(){
-        questionContainer = createDiv("", "questionContainer", "", document.body);
+        let questionContainer = createDiv("", "questionContainer", "", document.body);
         createQuestionTitle(question.title, questionContainer);
-        createCheckBoxes(questionContainer);
+        this.createCheckBoxes(questionContainer);
+        endLine(questionContainer);
+        this.createShowAnswerButton(questionContainer);
+        this.createCheckAnswerButton(questionContainer);
+        createNextQuestionButton(questionContainer);
     }
 }
 
@@ -66,6 +153,10 @@ class Question_Text extends Question{
         createQuestionCheckButton_Text(questionContainer, this);
         createNextQuestionButton(questionContainer);
     }
+}
+
+function toggleSelected(element){
+    element.classList.toggle("selected");
 }
 
 //Research later
@@ -108,11 +199,6 @@ function createInputBox(placeholder, _id, parent){
 function endLine(parent){
     element = document.createElement("br");
     parent.appendChild(element);
-}
-
-function createCheckBoxes(parent){
-    element = createElement("button", "", "", parent);
-    return element;
 }
 
 function createQuestionContainer(){
@@ -204,6 +290,7 @@ function deleteQuestionContainer(){
 
 async function getQuestionsAsJSON(id){
     const response = await fetch("questions/" + id);
+    console.log("[ GLOBAL ] Json " + id + " loaded.");
     return await response.json();
 }
 
@@ -232,7 +319,10 @@ async function getQuestions(id) {
 
 
 function getFilterButtonState(buttonID){
-    return document.getElementById(buttonID).classList.contains("activeFilterButton");
+    if(document.getElementById(buttonID))
+        return document.getElementById(buttonID).classList.contains("activeFilterButton");
+    else
+        return true;
 }
 
 lastQuestionID = null;
@@ -277,10 +367,6 @@ async function start(){
 
     question_files = config["question_file_names"];
 
-    filterContainer = createElement("div", "", "filterContainer", "", document.body);
-    createElement("a", "Show questions from:", "filterHeader", "", filterContainer);
-    endLine(filterContainer);
-
     for (const fileName of question_files) {
         let _questions = await getQuestions(fileName);
 
@@ -288,13 +374,24 @@ async function start(){
             key: fileName,
             value: _questions
         })
+    }
 
-        filterName = fileName.replace(/.json/gi, "");
+    if(config["show_categories"]) await createCategoryPanel(question_files);
+}
+
+async function createCategoryPanel(question_files){
+    let filterContainer = createElement("div", "", "filterContainer", "", document.body);
+    createElement("a", "Show questions from:", "filterHeader", "", filterContainer);
+    endLine(filterContainer);
+
+    for (const fileName of question_files) {
+        let _questions = await getQuestions(fileName);
+        let filterName = fileName.replace(/.json/gi, "");
         filterName = filterName.replace(/_/gi, " ");
 
         createFilterButton(
-            filterName + " (" + _questions.length + ")", 
-            "Filter_" + fileName, 
+            filterName + " (" + _questions.length + ")",
+            "Filter_" + fileName,
             filterContainer
         );
     }
