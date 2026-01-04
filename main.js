@@ -8,9 +8,16 @@ question_files = [];
 config = [];
 
 async function loadConfig(){
-    const response = await fetch("config/quiz.json");
+    let response;
+    response = await fetch("config/quiz.json");
+    if(response["redirected"] == false){
+        response = await fetch("https://cdn.jsdelivr.net/gh/VilemMakovicka/simple-html-quiz-creator@main/config/quiz.json");
+        console.log("[ GLOBAL ] Internal config wasn't found. Backup config loaded.");
+    }
+    else{
+        console.log("[ GLOBAL ] Internal config loaded.");
+    }
     config = await response.json();
-    console.log("[ GLOBAL ] config loaded.");
 }
 
 /*
