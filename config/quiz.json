@@ -12,5 +12,5 @@
     "button_next": "Next question",
     "response_text_correct": "Correct!",
     "response_text_wrong": "Wrong. Try again.",
-    "response_text_answer": "Correct answer: "
+    "response_text_answer": "Correct answer: {{answer}}"
 }

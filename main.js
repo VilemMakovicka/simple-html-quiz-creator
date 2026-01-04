@@ -8,7 +8,7 @@ question_files = [];
 config = [];
 
 async function loadConfig(){
-    const response = await fetch("config/quiz.jsonc");
+    const response = await fetch("config/quiz.json");
     config = await response.json();
 }
 
@@ -67,6 +67,19 @@ class Question_Text extends Question{
         createNextQuestionButton(questionContainer);
     }
 }
+
+//Research later
+function interpolateFromConfig(configValueName, internalValues){
+    tempValue = config[configValueName];
+    console.log(tempValue);
+    for(internalValue of internalValues){
+        tempValue = tempValue.replace(
+            "{{" + internalValue["key"] + "}}", 
+            internalValue["value"]
+        );
+    }
+    return tempValue;
+};
 
 function createElement(type, innerHtml, _class, _id, parent){
     element = document.createElement(type);
@@ -161,11 +174,11 @@ function createQuestionAnswersButton_Text(parent, question){
     element = createElement("button", config["button_answer"], "questionAnswerButton", "", parent);
 
     element.addEventListener("click", () => {
-        const answer = Array.isArray(question.answer) ? question.answer[0] : question.answer;
+        const answer = question.answer[0];
 
         let answerBox = parent.querySelector(".answers");
         if (!answerBox) { 
-            answerBox = createElement("div", config["response_text_answer"] + answer, "answers", "", parent);
+            answerBox = createElement("div",  interpolateFromConfig("response_text_answer", [{"key": "answer", "value": answer}]), "", "", parent);
             answerBox.style.color = "#4545ff";
         }
     });
