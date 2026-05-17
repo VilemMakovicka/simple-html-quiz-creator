@@ -1,0 +1,21 @@
+[
+	{
+		"type":"text",
+		"answers": [
+			"correct answer"
+		],
+		"text": "question"
+	},
+	{
+		"type":"select_single",
+		"text":"single answer question",
+		"answers_correct":["correct answer"],
+		"answers_false":["false answer 1", "false answer 2"]
+	},
+	{
+		"type":"select_multiple",
+		"text":"multiple answer question",
+		"answers_correct":["correct answer 1", "correct answer 2"],
+		"answers_false":["false answer 1", "false answer 2"]
+	}
+]

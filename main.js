@@ -107,7 +107,7 @@ class Question_Options extends Question{
         return value;
     }
     createShowAnswerButton(parent){
-        element = createElement("button", config["button_answer"], "questionAnswerButton", "", parent);
+        element = createElement("button", config["uielements"]["showanswer"]["textcontent"], "questionAnswerButton", "", parent);
 
         element.addEventListener("click", () => {
             let answerBox = parent.querySelector(".answers");
@@ -122,7 +122,7 @@ class Question_Options extends Question{
     createCheckAnswerButton(parent){
         element = document.createElement("button");
         element.className = "questionCheckButton";
-        element.innerHTML = config["button_check"];
+        element.innerHTML = config["uielements"]["checkanswer"]["textcontent"];
 
         element.addEventListener("click", () => { 
             let optionElements = document.getElementsByClassName("option_button");
@@ -137,9 +137,14 @@ class Question_Options extends Question{
         createQuestionTitle(question.title, questionContainer);
         this.createCheckBoxes(questionContainer);
         endLine(questionContainer);
-        this.createShowAnswerButton(questionContainer);
-        this.createCheckAnswerButton(questionContainer);
-        createNextQuestionButton(questionContainer);
+        if(config["uielements"]["showanswer"]["show"])
+            this.createShowAnswerButton(questionContainer);
+
+        if(config["uielements"]["checkanswer"]["show"])
+            this.createCheckAnswerButton(questionContainer);
+
+        if(config["uielements"]["nextquestion"]["show"])
+            createNextQuestionButton(questionContainer);
     }
 }
 
@@ -156,9 +161,14 @@ class Question_Text extends Question{
         inputbox.addEventListener("keydown", function(event) { if (event.key === "Enter") checkTextQuestion(questionContainer, question); }); 
         inputbox.focus();
         endLine(questionContainer);
-        createQuestionAnswersButton_Text(questionContainer, this);
-        createQuestionCheckButton_Text(questionContainer, this);
-        createNextQuestionButton(questionContainer);
+        if(config["uielements"]["showanswer"]["show"])
+            createQuestionAnswersButton_Text(questionContainer, this);
+
+        if(config["uielements"]["checkanswer"]["show"])
+            createQuestionCheckButton_Text(questionContainer, this);
+        
+        if(config["uielements"]["nextquestion"]["show"])
+            createNextQuestionButton(questionContainer);
     }
 }
 
@@ -167,8 +177,8 @@ function toggleSelected(element){
 }
 
 //Research later
-function interpolateFromConfig(configValueName, internalValues){
-    tempValue = config[configValueName];
+function interpolateFromConfig(configValue, internalValues){
+    tempValue = configValue;
     console.log(tempValue);
     for(internalValue of internalValues){
         tempValue = tempValue.replace(
@@ -219,7 +229,7 @@ function createQuestionTitle(text, container){
 function createQuestionCheckButton_Text(parent, question){
     element = document.createElement("button");
     element.className = "questionCheckButton";
-    element.innerHTML = config["button_check"];
+    element.innerHTML = config["uielements"]["checkanswer"]["textcontent"];
 
     element.addEventListener("click", () => { checkTextQuestion(parent, question); });
 
@@ -264,14 +274,14 @@ function checkTextQuestion(parent, question){
 }
 
 function createQuestionAnswersButton_Text(parent, question){
-    element = createElement("button", config["button_answer"], "questionAnswerButton", "", parent);
+    element = createElement("button", config["uielements"]["showanswer"]["textcontent"], "questionAnswerButton", "", parent);
 
     element.addEventListener("click", () => {
         const answer = question.answer[0];
 
         let answerBox = parent.querySelector(".answers");
         if (!answerBox) { 
-            answerBox = createElement("div",  interpolateFromConfig("response_text_answer", [{"key": "answer", "value": answer}]), "", "", parent);
+            answerBox = createElement("div",  interpolateFromConfig(config["response_text_answer"], [{"key": "answer", "value": answer}]), "", "", parent);
             answerBox.style.color = "#4545ff";
         }
     });
@@ -280,7 +290,7 @@ function createQuestionAnswersButton_Text(parent, question){
 }
 
 function createNextQuestionButton(parent){
-    button = createElement("button", config["button_next"], "nextQuestionButton", "", parent);
+    button = createElement("button", config["uielements"]["nextquestion"]["textcontent"], "nextQuestionButton", "", parent);
     button.addEventListener("click", () => { nextQuestion(); });
     return button;
 }
@@ -361,6 +371,25 @@ function createFilterButton(innerHtml, id, parent){
         document.getElementById(id).classList.toggle("activeFilterButton");
     });
 }
+
+async function createCategoryPanel(question_files){
+    let filterContainer = createElement("div", "", "filterContainer", "", document.body);
+    createElement("a", "Show questions from:", "filterHeader", "", filterContainer);
+    endLine(filterContainer);
+
+    for (const fileName of question_files) {
+        let _questions = await getQuestions(fileName);
+        let filterName = fileName.replace(/.json/gi, "");
+        filterName = filterName.replace(/_/gi, " ");
+
+        createFilterButton(
+            interpolateFromConfig(config["uielements"]["categories"]["format"], [{"key": "category", "value": filterName}, {"key": "amount", "value": _questions.length}]),
+            "Filter_" + fileName,
+            filterContainer
+        );
+    }
+}
+
 /*
 *
 * MAIN
@@ -383,25 +412,8 @@ async function start(){
         })
     }
 
-    if(config["show_categories"]) await createCategoryPanel(question_files);
-}
-
-async function createCategoryPanel(question_files){
-    let filterContainer = createElement("div", "", "filterContainer", "", document.body);
-    createElement("a", "Show questions from:", "filterHeader", "", filterContainer);
-    endLine(filterContainer);
-
-    for (const fileName of question_files) {
-        let _questions = await getQuestions(fileName);
-        let filterName = fileName.replace(/.json/gi, "");
-        filterName = filterName.replace(/_/gi, " ");
-
-        createFilterButton(
-            filterName + " (" + _questions.length + ")",
-            "Filter_" + fileName,
-            filterContainer
-        );
-    }
+    if(config["uielements"]["categories"]["show"]) 
+        await createCategoryPanel(question_files);
 }
 
 function ShowNewQuestion(){
